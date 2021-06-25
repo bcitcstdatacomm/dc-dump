@@ -106,6 +106,12 @@ static struct dc_application_settings *create_settings(void)
 
 static int destroy_settings(struct dc_application_settings **psettings)
 {
+    struct application_settings *app_settings;
+
+    app_settings = (struct application_settings *)*psettings;
+    dc_setting_path_destroy(&app_settings->input_path);
+    dc_setting_path_destroy(&app_settings->output_path);
+    dc_setting_path_destroy(&app_settings->dump_path);
     memset(*psettings, 0, sizeof(struct application_settings));
     free(*psettings);
     *psettings = NULL;

@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     struct dc_application_info *info;
     int                         ret_val;
 
-    info      = dc_application_info_create("Test Application", stderr);
+    info      = dc_application_info_create("Test Application", NULL);
     ret_val   = dc_application_run(info, create_lifecycle, "~/.dcdump.conf", argc, argv);
     dc_application_info_destroy(&info);
 
@@ -109,6 +109,7 @@ static int destroy_settings(struct dc_application_settings **psettings)
     struct application_settings *app_settings;
 
     app_settings = (struct application_settings *)*psettings;
+    dc_setting_bool_destroy(&app_settings->verbose);
     dc_setting_path_destroy(&app_settings->input_path);
     dc_setting_path_destroy(&app_settings->output_path);
     dc_setting_path_destroy(&app_settings->dump_path);

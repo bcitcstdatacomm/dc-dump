@@ -1,6 +1,3 @@
-include_directories(/usr/local/include)
-link_directories(/usr/local/lib)
-
 # Note that headers are optional, and do not affect add_library, but they will not
 # show up in IDEs unless they are listed in add_library.
 
@@ -14,7 +11,9 @@ file(GLOB SOURCE_LIST CONFIGURE_DEPENDS "${dc_dump_SOURCE_DIR}/src/*.c")
 add_executable(dc_dump ${SOURCE_LIST} ${HEADER_LIST})
 
 # We need this directory, and users of our library will need it too
-target_include_directories(dc_dump PUBLIC ../include)
+target_include_directories(dc_dump PRIVATE ../include)
+target_include_directories(dc_dump PRIVATE /usr/local/include)
+target_link_directories(dc_dump PRIVATE /usr/local/lib)
 
 # All users of this library will need at least C11
 target_compile_features(dc_dump PUBLIC c_std_11)

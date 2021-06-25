@@ -45,14 +45,6 @@ endif()
 # FetchContent added in CMake 3.11, downloads during the configure step
 include(FetchContent)
 
-# FSM library
-# FetchContent_Declare(
-#         libdc_fsm
-#         GIT_REPOSITORY https://github.com/bcitcstdatacomm/libdc_fsm
-#         # GIT_TAG 5.3.0
-#)
-# FetchContent_MakeAvailable(libdc_fsm)
-
 # The compiled library code is here
 add_subdirectory(src)
 

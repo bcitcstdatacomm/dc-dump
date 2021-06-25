@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
     struct dc_application_info *info;
     int                         ret_val;
 
-    info      = dc_application_info_create("Test Application", NULL);
+    info      = dc_application_info_create("Test Application", stderr);
     ret_val   = dc_application_run(info, create_lifecycle, "~/.dcdump.conf", argc, argv);
     dc_application_info_destroy(&info);
 
@@ -128,7 +128,7 @@ static int parse_command_line(struct dc_application_settings *settings, int argc
                     { "in",       required_argument, 0,             'i' },
                     { "out",      required_argument, 0,             'o' },
                     { "dump-out", required_argument, 0,             'd' },
-                    {0,           0,                 0,             0   }
+                    { 0,          0,                 0,             0   }
             };
 
     struct application_settings *app_settings;
@@ -316,8 +316,10 @@ static int run(struct dc_application_settings *settings)
     off_t                        max_position;
     struct dc_stream_copy_info  *copy_info;
     struct dc_dump_info         *info;
+    int                          ret_val;
 
     app_settings = (struct application_settings *)settings;
+    ret_val      = 0;
 
     if(dc_setting_is_set((struct dc_setting *)app_settings->input_path))
     {
@@ -330,36 +332,42 @@ static int run(struct dc_application_settings *settings)
 
         if(fd < 0)
         {
+            // todo: what to do?
             fprintf(stderr, "Can't open file %s\n", path);
-            exit(2);
+            ret_val = -1;
         }
-
-        dup2(fd, STDIN_FILENO);
-        fstat(fd, &file_info);
-        max_position = file_info.st_size;
+        else
+        {
+            dup2(fd, STDIN_FILENO);
+            fstat(fd, &file_info);
+            max_position = file_info.st_size;
+        }
     }
     else
     {
         max_position = (off_t)(powl(2, sizeof(off_t) * 8) / 2) - 1;
     }
 
-    if(dc_setting_is_set((struct dc_setting *)app_settings->output_path))
+    if(ret_val >= 0)
     {
-        out_path = dc_setting_path_get(app_settings->input_path);
-    }
-    else
-    {
-        out_path = "/dev/null";
+        if(dc_setting_is_set((struct dc_setting *)app_settings->output_path))
+        {
+            out_path = dc_setting_path_get(app_settings->input_path);
+        }
+        else
+        {
+            out_path = "/dev/null";
+        }
+
+        fd_out = open(out_path, O_WRONLY);
+        info = dc_dump_dump_info_create(STDOUT_FILENO, max_position);
+        copy_info = dc_stream_copy_info_create(NULL, dc_dumper, info, NULL, NULL);
+        dc_stream_copy(STDIN_FILENO, fd_out, 1024, copy_info);
+        dc_stream_copy_info_destroy(&copy_info);
+        dc_dump_dump_info_destroy(&info);
     }
 
-    fd_out    = open(out_path, O_WRONLY);
-    info      = dc_dump_dump_info_create(STDOUT_FILENO, max_position);
-    copy_info = dc_stream_copy_info_create(NULL, dc_dumper, info, NULL, NULL);
-    dc_stream_copy(STDIN_FILENO, fd_out, 1024, copy_info);
-    dc_stream_copy_info_destroy(&copy_info);
-    dc_dump_dump_info_destroy(&info);
-
-    return 0;
+    return ret_val;
 }
 
 static int cleanup(__attribute__((unused)) struct dc_application_settings *settings)

@@ -1,5 +1,5 @@
-#ifndef DC_DUMP_H
-#define DC_DUMP_H
+#ifndef DC_DUMP_DUMP_H
+#define DC_DUMP_DUMP_H
 
 
 /*
@@ -33,4 +33,4 @@ void dc_dump_dump_info_destroy(struct dc_dump_info **pinfo);
 void dc_dumper(uint8_t item, size_t line_position, size_t count, size_t file_position, void *arg);
 
 
-#endif
+#endif // DC_DUMP_DUMP_H

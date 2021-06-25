@@ -29,6 +29,7 @@
 #include <libconfig.h>
 #pragma GCC diagnostic pop
 #include <dc_util/streams.h>
+#include <dc_util/types.h>
 #include <dc_application/application.h>
 #include <dc_application/settings.h>
 #pragma GCC diagnostic push
@@ -347,7 +348,7 @@ static int run(struct dc_application_settings *settings)
     }
     else
     {
-        max_position = (off_t)(powl(2, sizeof(off_t) * 8) / 2) - 1;
+        max_position = dc_max_off_t();
     }
 
     if(ret_val >= 0)

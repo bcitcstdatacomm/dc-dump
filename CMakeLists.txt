@@ -41,9 +41,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
     endif()
 endif()
 
-# FetchContent added in CMake 3.11, downloads during the configure step
-include(FetchContent)
-
 # The compiled library code is here
 add_subdirectory(src)
 

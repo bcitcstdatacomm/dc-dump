@@ -1,10 +1,6 @@
 # Note that headers are optional, and do not affect add_library, but they will not
 # show up in IDEs unless they are listed in add_library.
 
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_EXTENSIONS OFF)
-
-
 # Get header files
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${dc_dump_SOURCE_DIR}/include/*.h")
 

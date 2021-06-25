@@ -20,10 +20,7 @@ endif()
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
     # Optionally set things like CMAKE_CXX_STANDARD, CMAKE_POSITION_INDEPENDENT_CODE here
-
     set(CMAKE_C_STANDARD 11)
-
-    # Let's ensure -std=c11 instead of -std=g11
     set(CMAKE_C_EXTENSIONS OFF)
 
     # Let's nicely support folders in IDEs

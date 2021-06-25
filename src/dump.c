@@ -48,6 +48,7 @@ struct dc_dump_info
 struct dc_dump_info *dc_dump_dump_info_create(int fd, off_t file_size)
 {
     struct dc_dump_info *info;
+    const char *format;
 
     info                = calloc(1, sizeof(struct dc_dump_info));
     info->fd            = fd;
@@ -60,7 +61,7 @@ struct dc_dump_info *dc_dump_dump_info_create(int fd, off_t file_size)
     // NOTE: this will be controlled by options in the future
     // file pos line # line pos : binary : octal : decimal : hex : ascii or
     // max_digits max_digits max_digits : 11111111 : 0377 : 255 : 0xFF : ????
-    const char *format = "%*d %*d %*d : %08s : 0%03o : %03d : 0x%02X : %-4s";
+    format = "%*d %*d %*d : %08s : 0%03o : %03d : 0x%02X : %-4s";
     info->line_format = malloc(strlen(format) + 1);
     strcpy(info->line_format, format);
 

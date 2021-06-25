@@ -30,7 +30,10 @@
 #include <dc_util/streams.h>
 #include <dc_application/application.h>
 #include <dc_application/settings.h>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-macros"
 #define __USE_POSIX 1
+#pragma GCC diagnostic pop
 #include <string.h>
 
 
@@ -241,11 +244,11 @@ static int load_config(struct dc_application_settings *settings)
 {
     const char *config_path;
     struct application_settings *app_settings;
+    config_t cfg;
+
 
     config_path  = dc_setting_path_get(settings->config_path);
     app_settings = (struct application_settings *)settings;
-
-    config_t cfg;
 
     config_init(&cfg);
 

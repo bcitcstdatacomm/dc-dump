@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <getopt.h>
 #include <math.h>
+#include <fcntl.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
 #include <libconfig.h>

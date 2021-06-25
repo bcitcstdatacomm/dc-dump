@@ -21,7 +21,6 @@
 #include <sys/fcntl.h>
 #include <sys/stat.h>
 #include <stdlib.h>
-#include <string.h>
 #include <getopt.h>
 #include <math.h>
 #pragma GCC diagnostic push
@@ -31,6 +30,8 @@
 #include <dc_util/streams.h>
 #include <dc_application/application.h>
 #include <dc_application/settings.h>
+#define __USE_POSIX 1
+#include <string.h>
 
 
 struct application_settings

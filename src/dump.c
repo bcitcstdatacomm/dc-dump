@@ -211,7 +211,7 @@ static const char *lookup_control(uint8_t c)
             };
     const char *value;
 
-    if(c >= 0 && c <= 31)
+    if(c <= 31)
     {
         value = LOW_VALUES[c];
     }

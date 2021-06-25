@@ -1,6 +1,10 @@
 # Note that headers are optional, and do not affect add_library, but they will not
 # show up in IDEs unless they are listed in add_library.
 
+set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_EXTENSIONS OFF)
+
+
 # Get header files
 file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${dc_dump_SOURCE_DIR}/include/*.h")
 
@@ -15,11 +19,17 @@ target_include_directories(dc_dump PRIVATE ../include)
 target_include_directories(dc_dump PRIVATE /usr/local/include)
 target_link_directories(dc_dump PRIVATE /usr/local/lib)
 
+
 # All users of this library will need at least C11
 target_compile_features(dc_dump PUBLIC c_std_11)
 target_compile_options(dc_dump PRIVATE -fstack-protector-all)
 target_compile_options(dc_dump PRIVATE -Wpedantic -Wall -Wextra)
 target_compile_options(dc_dump PRIVATE -Wdouble-promotion -Wformat-nonliteral -Wformat-security -Wformat-y2k -Wnull-dereference -Winit-self -Wmissing-include-dirs -Wswitch-default -Wswitch-enum -Wunused-local-typedefs -Wstrict-overflow=5 -Wmissing-noreturn -Walloca -Wframe-address -Wfloat-equal -Wdeclaration-after-statement -Wshadow -Wpointer-arith -Wabsolute-value -Wundef -Wexpansion-to-defined -Wunused-macros -Wno-endif-labels -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wdangling-else -Wdate-time -Wempty-body -Wsign-conversion -Wfloat-conversion -Waggregate-return -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations -Wpacked -Wpadded -Wredundant-decls -Wnested-externs -Winline -Winvalid-pch -Wlong-long -Wvariadic-macros -Wdisabled-optimization -Wstack-protector -Woverlength-strings )
+
+find_library(LIBM m REQUIRED)
+if(LIBM)
+    target_link_libraries(dc_dump ${LIBM})
+endif()
 
 find_library(LIBDC_FSM dc_fsm REQUIRED)
 if(LIBDC_FSM)

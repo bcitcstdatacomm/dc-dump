@@ -23,13 +23,34 @@
 #include <stdint.h>
 #include <stddef.h>
 #include <sys/types.h>
+#include <dc_posix/stdlib.h>
 
 
 struct dc_dump_info;
 
 
-struct dc_dump_info *dc_dump_dump_info_create(int fd, off_t file_size);
+/**
+ *
+ * @param fd
+ * @param file_size
+ * @return
+ */
+struct dc_dump_info *dc_dump_dump_info_create(const struct dc_posix_env *env, int fd, off_t file_size);
+
+/**
+ *
+ * @param pinfo
+ */
 void dc_dump_dump_info_destroy(struct dc_dump_info **pinfo);
+
+/**
+ *
+ * @param item
+ * @param line_position
+ * @param count
+ * @param file_position
+ * @param arg
+ */
 void dc_dumper(uint8_t item, size_t line_position, size_t count, size_t file_position, void *arg);
 
 

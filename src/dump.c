@@ -45,10 +45,11 @@ struct dc_dump_info
 
 
 
-struct dc_dump_info *dc_dump_dump_info_create(int fd, off_t file_size)
+struct dc_dump_info *dc_dump_dump_info_create(const struct dc_posix_env *env, int fd, off_t file_size)
 {
     struct dc_dump_info *info;
     const char *format;
+    int err;
 
     info                = calloc(1, sizeof(struct dc_dump_info));
     info->fd            = fd;
@@ -62,7 +63,12 @@ struct dc_dump_info *dc_dump_dump_info_create(int fd, off_t file_size)
     // file pos line # line pos : binary : octal : decimal : hex : ascii or
     // max_digits max_digits max_digits : 11111111 : 0377 : 255 : 0xFF : ????
     format = "%*d %*d %*d : %08s : 0%03o : %03d : 0x%02X : %-4s";
-    info->line_format = malloc(strlen(format) + 1);
+    info->line_format = dc_malloc(env, &err, strlen(format) + 1);
+
+    if(info->line_format == NULL)
+    {
+    }
+
     strcpy(info->line_format, format);
 
     // 3 * "%*d " where * is info->max_position
@@ -72,7 +78,11 @@ struct dc_dump_info *dc_dump_dump_info_create(int fd, off_t file_size)
     // ": 0x### " for hex (8)
     // ": ????" for the ASCII value (6)
     // '\0' + 1
-    info->line_buffer = calloc(1, (3 * (info->max_position + 1)) + 11 + 7 + 6 + 8 + 6 + 1);
+    info->line_buffer = dc_malloc(env, &err, (3 * (info->max_position + 1)) + 11 + 7 + 6 + 8 + 6 + 1);
+
+    if(info->line_buffer == NULL)
+    {
+    }
 
     return info;
 }

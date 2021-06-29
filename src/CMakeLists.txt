@@ -1,11 +1,14 @@
 # Note that headers are optional, and do not affect add_library, but they will not
 # show up in IDEs unless they are listed in add_library.
 
-# Get header files
-file(GLOB HEADER_LIST CONFIGURE_DEPENDS "${dc_dump_SOURCE_DIR}/include/*.h")
+set(HEADER_LIST
+        "${dc_dump_SOURCE_DIR}/include/dump.h"
+        )
 
-# Get source files
-file(GLOB SOURCE_LIST CONFIGURE_DEPENDS "${dc_dump_SOURCE_DIR}/src/*.c")
+set(SOURCE_LIST
+        "dump.c"
+        "main.c"
+        )
 
 # Make an static library
 add_executable(dc_dump ${SOURCE_LIST} ${HEADER_LIST})
@@ -27,14 +30,19 @@ if(LIBM)
     target_link_libraries(dc_dump ${LIBM})
 endif()
 
-find_library(LIBDC_FSM dc_fsm REQUIRED)
-if(LIBDC_FSM)
-    target_link_libraries(dc_dump ${LIBDC_FSM})
+find_library(LIBDC_POSIX dc_posix REQUIRED)
+if(LIBDC_POSIX)
+    target_link_libraries(dc_dump ${LIBDC_POSIX})
 endif()
 
 find_library(LIBDC_UTIL dc_util REQUIRED)
 if(LIBDC_UTIL)
     target_link_libraries(dc_dump ${LIBDC_UTIL})
+endif()
+
+find_library(LIBDC_FSM dc_fsm REQUIRED)
+if(LIBDC_FSM)
+    target_link_libraries(dc_dump ${LIBDC_FSM})
 endif()
 
 find_library(LIBDC_APPLICATION dc_application REQUIRED)

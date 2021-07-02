@@ -48,10 +48,18 @@ struct dc_dump_info
 struct dc_dump_info *dc_dump_dump_info_create(const struct dc_posix_env *env, int fd, off_t file_size)
 {
     struct dc_dump_info *info;
-    const char *format;
-    int err;
+    size_t               format_size;
+    const char          *format;
+    int                  err;
 
-    info                = calloc(1, sizeof(struct dc_dump_info));
+    printf("%lu\n", file_size);
+
+    info = dc_calloc(env, &err, 1, sizeof(struct dc_dump_info));
+
+    if(info == NULL)
+    {
+    }
+
     info->fd            = fd;
     info->line_number   = 1;
     info->line_position = 1;
@@ -78,7 +86,10 @@ struct dc_dump_info *dc_dump_dump_info_create(const struct dc_posix_env *env, in
     // ": 0x### " for hex (8)
     // ": ????" for the ASCII value (6)
     // '\0' + 1
-    info->line_buffer = dc_malloc(env, &err, (3 * (info->max_position + 1)) + 11 + 7 + 6 + 8 + 6 + 1);
+    format_size = (3 * (info->max_position + 1)) + 11 + 7 + 6 + 8 + 6 + 1;
+printf("%lu\n", info->max_position);
+printf("%lu\n", format_size);
+    info->line_buffer = dc_malloc(env, &err, format_size);
 
     if(info->line_buffer == NULL)
     {
@@ -89,6 +100,8 @@ struct dc_dump_info *dc_dump_dump_info_create(const struct dc_posix_env *env, in
 
 void dc_dump_dump_info_destroy(struct dc_dump_info **pinfo)
 {
+    free((*pinfo)->line_format);
+    free((*pinfo)->line_buffer);
     memset(*pinfo, 0, sizeof(struct dc_dump_info));
     free(*pinfo);
     *pinfo = NULL;

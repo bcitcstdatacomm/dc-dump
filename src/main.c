@@ -184,7 +184,7 @@ static int run(struct dc_application_settings *settings)
     {
         if(dc_setting_is_set((struct dc_setting *)app_settings->output_path))
         {
-            out_path = dc_setting_path_get(app_settings->input_path);
+            out_path = dc_setting_path_get(app_settings->output_path);
         }
         else
         {

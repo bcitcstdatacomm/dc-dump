@@ -109,7 +109,7 @@ void dc_dumper(uint8_t item, __attribute__((unused)) size_t line_position, __att
     struct dc_dump_info *info;
     bool                 bits[8];
     char                 binary[9];
-    char                 printable[4];
+    char                 printable[5];
 
     dc_to_binary8(item, bits);
     dc_to_printable_binary8(bits, binary);
@@ -238,7 +238,7 @@ static const char *lookup_control(uint8_t c)
     }
     else if(c >= 127 && c <= 159)
     {
-        value = HIGH_VALUES[c];
+        value = HIGH_VALUES[c - 127];
     }
     else
     {

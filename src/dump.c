@@ -34,7 +34,7 @@ static const char *lookup_control(uint8_t c);
 #pragma GCC diagnostic ignored "-Wpadded"
 struct dc_dump_info
 {
-    int fd;
+    int dump_fd;
     size_t max_position;
     size_t line_number;
     size_t line_position;
@@ -58,7 +58,7 @@ struct dc_dump_info *dc_dump_dump_info_create(const struct dc_posix_env *env, in
     {
     }
 
-    info->fd            = fd;
+    info->dump_fd       = fd;
     info->line_number   = 1;
     info->line_position = 1;
 
@@ -140,8 +140,8 @@ void dc_dumper(uint8_t item, __attribute__((unused)) size_t line_position, __att
             info->max_position, info->line_position,
             binary, item, item, item, printable);
 #pragma GCC diagnostic pop
-    write(info->fd, info->line_buffer, strlen(info->line_buffer));
-    write(info->fd, "\n", 1);
+    write(info->dump_fd, info->line_buffer, strlen(info->line_buffer));
+    write(info->dump_fd, "\n", 1);
 
     if(item == '\n')
     {

@@ -52,6 +52,9 @@ static int destroy_settings(struct dc_application_settings **psettings);
 static int run(struct dc_application_settings *settings);
 static void error_reporter(const char *file_name, const char *function_name, size_t line_number, int err);
 static void trace(const char *file_name, const char *function_name, size_t line_number);
+static off_t link_stdin(struct dc_setting_path *path);
+static int link_stdout(struct dc_setting_path *path);
+static int open_out(struct dc_setting_path *path);
 
 
 int main(int argc, char *argv[])
@@ -141,26 +144,65 @@ static int destroy_settings(struct dc_application_settings **psettings)
 static int run(struct dc_application_settings *settings)
 {
     struct application_settings *app_settings;
-    off_t                        max_position;
     int                          ret_val;
+    off_t                        max_position;
+    int                          fd_dump;
+    int                          fd_out;
+    struct dc_stream_copy_info  *copy_info;
+    struct dc_dump_info         *info;
+
 
     app_settings = (struct application_settings *)settings;
     ret_val      = 0;
+    max_position = link_stdin(app_settings->input_path);
 
-    if(dc_setting_is_set((struct dc_setting *)app_settings->input_path))
+    if(max_position < 0)
     {
-        const char *in_path;
+        fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(app_settings->input_path));
+        return -1;
+    }
+
+    fd_dump = link_stdout(app_settings->dump_path);
+
+    if(fd_dump < 0)
+    {
+        fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(app_settings->dump_path));
+        return -1;
+    }
+
+    fd_out = open_out(app_settings->output_path);
+
+    if(fd_out < 0)
+    {
+        fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(app_settings->input_path));
+        return -1;
+    }
+
+    info = dc_dump_dump_info_create(settings->env, STDOUT_FILENO, max_position);
+    copy_info = dc_stream_copy_info_create(settings->env, NULL, dc_dumper, info, NULL, NULL);
+    dc_stream_copy(settings->env, STDIN_FILENO, fd_out, 1024, copy_info);
+    dc_stream_copy_info_destroy(settings->env, &copy_info);
+    dc_dump_dump_info_destroy(&info);
+
+    return ret_val;
+}
+
+static off_t link_stdin(struct dc_setting_path *setting)
+{
+    off_t max_position;
+
+    if(dc_setting_is_set((struct dc_setting *)setting))
+    {
+        const char *path;
         int         fd;
         struct stat file_info;
 
-        in_path = dc_setting_path_get(app_settings->input_path);
-        fd   = open(in_path, O_RDONLY);
+        path = dc_setting_path_get(setting);
+        fd   = open(path, O_RDONLY);
 
         if(fd < 0)
         {
-            // todo: what to do?
-            fprintf(stderr, "Can't open file %s\n", in_path);
-            ret_val = -1;
+            max_position = -1;
         }
         else
         {
@@ -174,43 +216,49 @@ static int run(struct dc_application_settings *settings)
         max_position = dc_max_off_t();
     }
 
-    if(ret_val == 0)
+    return max_position;
+}
+
+
+static int link_stdout(struct dc_setting_path *setting)
+{
+    int ret_val;
+
+    ret_val = 0;
+
+    if(dc_setting_is_set((struct dc_setting *)setting))
     {
-        const char *out_path;
-        int         fd_out;
+        const char *path;
 
-        if(dc_setting_is_set((struct dc_setting *)app_settings->output_path))
+        path = dc_setting_path_get(setting);
+        ret_val = open(path, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+
+        if(ret_val > 0)
         {
-            out_path = dc_setting_path_get(app_settings->output_path);
-        }
-        else
-        {
-            out_path = "/dev/null";
-        }
-
-        fd_out = open(out_path, O_CREAT | O_TRUNC | O_WRONLY, 0600);
-
-        if(fd_out < 0)
-        {
-            // todo: what to do?
-            fprintf(stderr, "Can't open file %s\n", out_path);
-            ret_val = -1;
-        }
-
-        if(ret_val == 0)
-        {
-            struct dc_stream_copy_info *copy_info;
-            struct dc_dump_info        *info;
-
-            info = dc_dump_dump_info_create(settings->env, STDOUT_FILENO, max_position);
-            copy_info = dc_stream_copy_info_create(settings->env, NULL, dc_dumper, info, NULL, NULL);
-            dc_stream_copy(settings->env, STDIN_FILENO, fd_out, 1024, copy_info);
-            dc_stream_copy_info_destroy(settings->env, &copy_info);
-            dc_dump_dump_info_destroy(&info);
+            dup2(ret_val, STDOUT_FILENO);
         }
     }
 
     return ret_val;
+}
+
+static int open_out(struct dc_setting_path *setting)
+{
+    const char *path;
+    int         fd;
+
+    if(dc_setting_is_set((struct dc_setting *)setting))
+    {
+        path = dc_setting_path_get(setting);
+    }
+    else
+    {
+        path = "/dev/null";
+    }
+
+    fd = open(path, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+
+    return fd;
 }
 
 static void error_reporter(const char *file_name, const char *function_name, size_t line_number, int err)

@@ -50,7 +50,6 @@ static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_e
 static struct dc_application_settings *create_settings(const struct dc_posix_env *env);
 static int destroy_settings(struct dc_application_settings **psettings);
 static int run(struct dc_application_settings *settings);
-static int cleanup(struct dc_application_settings *settings);
 static void error_reporter(const char *file_name, const char *function_name, size_t line_number, int err);
 static void trace(const char *file_name, const char *function_name, size_t line_number);
 
@@ -80,7 +79,6 @@ static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_e
     dc_application_lifecycle_set_read_env_vars(lifecycle, dc_default_read_env_vars);
     dc_application_lifecycle_set_read_config(lifecycle, dc_default_load_config);
     dc_application_lifecycle_set_set_defaults(lifecycle, dc_default_set_defaults);
-    dc_application_lifecycle_set_cleanup(lifecycle, cleanup);
 
     return lifecycle;
 }
@@ -212,13 +210,7 @@ static int run(struct dc_application_settings *settings)
         }
     }
 
-//    return 1;
     return ret_val;
-}
-
-static int cleanup(__attribute__((unused)) struct dc_application_settings *settings)
-{
-    return 0;
 }
 
 static void error_reporter(const char *file_name, const char *function_name, size_t line_number, int err)

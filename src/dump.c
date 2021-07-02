@@ -52,8 +52,6 @@ struct dc_dump_info *dc_dump_dump_info_create(const struct dc_posix_env *env, in
     const char          *format;
     int                  err;
 
-    printf("%lld\n", file_size);
-
     info = dc_calloc(env, &err, 1, sizeof(struct dc_dump_info));
 
     if(info == NULL)
@@ -66,10 +64,7 @@ struct dc_dump_info *dc_dump_dump_info_create(const struct dc_posix_env *env, in
 
     // TODO - breaks for 999999999999999997 - 999999999999999999
 
-    printf("log10l       = %Lf\n", log10l(file_size));
-    printf("log10l + 1   = %Lf\n", (log10l(file_size) + 1.0l));
     info->max_position = (size_t)(log10l(file_size) + 1.0l);
-    printf("max_position = %zu\n", info->max_position);
 
     // NOTE: this will be controlled by options in the future
     // file pos line # line pos : binary : octal : decimal : hex : ascii or
@@ -91,7 +86,6 @@ struct dc_dump_info *dc_dump_dump_info_create(const struct dc_posix_env *env, in
     // ": ????" for the ASCII value (6)
     // '\0' + 1
     format_size = (3 * (info->max_position + 1)) + 11 + 7 + 6 + 8 + 6 + 1;
-printf("%lu\n", format_size);
     info->line_buffer = dc_malloc(env, &err, format_size);
 
     if(info->line_buffer == NULL)

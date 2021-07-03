@@ -63,7 +63,7 @@ int main(int argc, char *argv[])
     int                         ret_val;
 
     dc_posix_env_init(&env, error_reporter);
-    env.tracer = trace;
+//    env.tracer = trace;
     info      = dc_application_info_create(&env, "Test Application", NULL);
     ret_val   = dc_application_run(&env, info, create_lifecycle, "~/.dcdump.conf", argc, argv);
     dc_application_info_destroy(&env, &info);

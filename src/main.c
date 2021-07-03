@@ -16,7 +16,7 @@
  */
 
 
-#include "dump.h"
+#include <dc_util/dump.h>
 #include <dc_application/command_line.h>
 #include <dc_application/environment.h>
 #include <dc_application/config.h>
@@ -25,7 +25,6 @@
 #include <dc_util/streams.h>
 #include <dc_util/types.h>
 #include <unistd.h>
-#include <stdlib.h>
 #include <getopt.h>
 #include <sys/fcntl.h>
 #include <sys/stat.h>
@@ -48,13 +47,13 @@ struct application_settings
 
 static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_env *env);
 static struct dc_application_settings *create_settings(const struct dc_posix_env *env);
-static int destroy_settings(struct dc_application_settings **psettings);
-static int run(struct dc_application_settings *settings);
-static void error_reporter(const char *file_name, const char *function_name, size_t line_number, int err);
-static void trace(const char *file_name, const char *function_name, size_t line_number);
-static off_t link_stdin(struct dc_setting_path *path);
-static int link_stdout(struct dc_setting_path *path);
-static int open_out(struct dc_setting_path *path);
+static int destroy_settings(const struct dc_posix_env *env, struct dc_application_settings **psettings);
+static int run(const struct dc_posix_env *env, struct dc_application_settings *settings);
+static off_t link_stdin(const struct dc_posix_env *env, struct dc_setting_path *setting);
+static int link_stdout(const struct dc_posix_env *env, struct dc_setting_path *setting);
+static int open_out(const struct dc_posix_env *env, struct dc_setting_path *setting);
+static void error_reporter(const struct dc_posix_env *env, const char *file_name, const char *function_name, size_t line_number, int err);
+static void trace(const struct dc_posix_env *env, const char *file_name, const char *function_name, size_t line_number);
 
 
 int main(int argc, char *argv[])
@@ -64,10 +63,10 @@ int main(int argc, char *argv[])
     int                         ret_val;
 
     dc_posix_env_init(&env, error_reporter);
-//    env.tracer = trace;
-    info      = dc_application_info_create("Test Application", NULL, &env);
-    ret_val   = dc_application_run(info, create_lifecycle, "~/.dcdump.conf", argc, argv);
-    dc_application_info_destroy(&info);
+    env.tracer = trace;
+    info      = dc_application_info_create(&env, "Test Application", NULL);
+    ret_val   = dc_application_run(&env, info, create_lifecycle, "~/.dcdump.conf", argc, argv);
+    dc_application_info_destroy(&env, &info);
 
     return ret_val;
 }
@@ -77,11 +76,12 @@ static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_e
 {
     struct dc_application_lifecycle *lifecycle;
 
+    DC_TRACE(env);
     lifecycle = dc_application_lifecycle_create(env, create_settings, destroy_settings, run);
-    dc_application_lifecycle_set_parse_command_line(lifecycle, dc_default_parse_command_line);
-    dc_application_lifecycle_set_read_env_vars(lifecycle, dc_default_read_env_vars);
-    dc_application_lifecycle_set_read_config(lifecycle, dc_default_load_config);
-    dc_application_lifecycle_set_set_defaults(lifecycle, dc_default_set_defaults);
+    dc_application_lifecycle_set_parse_command_line(env, lifecycle, dc_default_parse_command_line);
+    dc_application_lifecycle_set_read_env_vars(env, lifecycle, dc_default_read_env_vars);
+    dc_application_lifecycle_set_read_config(env, lifecycle, dc_default_load_config);
+    dc_application_lifecycle_set_set_defaults(env, lifecycle, dc_default_set_defaults);
 
     return lifecycle;
 }
@@ -92,6 +92,7 @@ static struct dc_application_settings *create_settings(const struct dc_posix_env
     struct application_settings *settings;
     int                          err;
 
+    DC_TRACE(env);
     settings = dc_malloc(env, &err, sizeof(struct application_settings));
 
     if(settings == NULL)
@@ -99,12 +100,11 @@ static struct dc_application_settings *create_settings(const struct dc_posix_env
         return NULL;
     }
 
-    settings->opts.parent.env         = env;
-    settings->opts.parent.config_path = dc_setting_path_create();
-    settings->verbose                 = dc_setting_bool_create();
-    settings->input_path              = dc_setting_path_create();
-    settings->output_path             = dc_setting_path_create();
-    settings->dump_path               = dc_setting_path_create();
+    settings->opts.parent.config_path = dc_setting_path_create(env);
+    settings->verbose                 = dc_setting_bool_create(env);
+    settings->input_path              = dc_setting_path_create(env);
+    settings->output_path             = dc_setting_path_create(env);
+    settings->dump_path               = dc_setting_path_create(env);
 
     struct options opts[] =
     {
@@ -124,24 +124,25 @@ static struct dc_application_settings *create_settings(const struct dc_posix_env
     return (struct dc_application_settings *)settings;
 }
 
-static int destroy_settings(struct dc_application_settings **psettings)
+static int destroy_settings(const struct dc_posix_env *env, struct dc_application_settings **psettings)
 {
     struct application_settings *app_settings;
 
+    DC_TRACE(env);
     app_settings = (struct application_settings *)*psettings;
-    dc_setting_bool_destroy(&app_settings->verbose);
-    dc_setting_path_destroy(&app_settings->input_path);
-    dc_setting_path_destroy(&app_settings->output_path);
-    dc_setting_path_destroy(&app_settings->dump_path);
-    free(app_settings->opts.opts);
+    dc_setting_bool_destroy(env, &app_settings->verbose);
+    dc_setting_path_destroy(env, &app_settings->input_path);
+    dc_setting_path_destroy(env, &app_settings->output_path);
+    dc_setting_path_destroy(env, &app_settings->dump_path);
+    dc_free(env, app_settings->opts.opts);
     memset(*psettings, 0, sizeof(struct application_settings));
-    free(*psettings);
+    dc_free(env, *psettings);
     *psettings = NULL;
 
     return 0;
 }
 
-static int run(struct dc_application_settings *settings)
+static int run(const struct dc_posix_env *env, struct dc_application_settings *settings)
 {
     struct application_settings *app_settings;
     int                          ret_val;
@@ -151,53 +152,55 @@ static int run(struct dc_application_settings *settings)
     struct dc_stream_copy_info  *copy_info;
     struct dc_dump_info         *info;
 
-
+    DC_TRACE(env);
     app_settings = (struct application_settings *)settings;
     ret_val      = 0;
-    max_position = link_stdin(app_settings->input_path);
+    max_position = link_stdin(env, app_settings->input_path);
 
     if(max_position < 0)
     {
-        fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(app_settings->input_path));
+        fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(env, app_settings->input_path));
         return -1;
     }
 
-    fd_dump = link_stdout(app_settings->dump_path);
+    fd_dump = link_stdout(env, app_settings->dump_path);
 
     if(fd_dump < 0)
     {
-        fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(app_settings->dump_path));
+        fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(env, app_settings->dump_path));
         return -1;
     }
 
-    fd_out = open_out(app_settings->output_path);
+    fd_out = open_out(env, app_settings->output_path);
 
     if(fd_out < 0)
     {
-        fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(app_settings->input_path));
+        fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(env, app_settings->input_path));
         return -1;
     }
 
-    info = dc_dump_dump_info_create(settings->env, STDOUT_FILENO, max_position);
-    copy_info = dc_stream_copy_info_create(settings->env, NULL, dc_dumper, info, NULL, NULL);
-    dc_stream_copy(settings->env, STDIN_FILENO, fd_out, 1024, copy_info);
-    dc_stream_copy_info_destroy(settings->env, &copy_info);
-    dc_dump_dump_info_destroy(&info);
+    info = dc_dump_info_create(env, STDOUT_FILENO, max_position);
+    copy_info = dc_stream_copy_info_create(env, NULL, dc_dump_dumper, info, NULL, NULL);
+    dc_stream_copy(env, STDIN_FILENO, fd_out, 1024, copy_info);
+    dc_stream_copy_info_destroy(env, &copy_info);
+    dc_dump_info_destroy(env, &info);
 
     return ret_val;
 }
 
-static off_t link_stdin(struct dc_setting_path *setting)
+static off_t link_stdin(const struct dc_posix_env *env, struct dc_setting_path *setting)
 {
     off_t max_position;
 
-    if(dc_setting_is_set((struct dc_setting *)setting))
+    DC_TRACE(env);
+
+    if(dc_setting_is_set(env, (struct dc_setting *)setting))
     {
         const char *path;
         int         fd;
         struct stat file_info;
 
-        path = dc_setting_path_get(setting);
+        path = dc_setting_path_get(env, setting);
         fd   = open(path, O_RDONLY);
 
         if(fd < 0)
@@ -213,24 +216,25 @@ static off_t link_stdin(struct dc_setting_path *setting)
     }
     else
     {
-        max_position = dc_max_off_t();
+        max_position = dc_max_off_t(env);
     }
 
     return max_position;
 }
 
 
-static int link_stdout(struct dc_setting_path *setting)
+static int link_stdout(const struct dc_posix_env *env, struct dc_setting_path *setting)
 {
     int ret_val;
 
+    DC_TRACE(env);
     ret_val = 0;
 
-    if(dc_setting_is_set((struct dc_setting *)setting))
+    if(dc_setting_is_set(env, (struct dc_setting *)setting))
     {
         const char *path;
 
-        path = dc_setting_path_get(setting);
+        path = dc_setting_path_get(env, setting);
         ret_val = open(path, O_CREAT | O_TRUNC | O_WRONLY, 0600);
 
         if(ret_val > 0)
@@ -242,14 +246,16 @@ static int link_stdout(struct dc_setting_path *setting)
     return ret_val;
 }
 
-static int open_out(struct dc_setting_path *setting)
+static int open_out(const struct dc_posix_env *env, struct dc_setting_path *setting)
 {
     const char *path;
     int         fd;
 
-    if(dc_setting_is_set((struct dc_setting *)setting))
+    DC_TRACE(env);
+
+    if(dc_setting_is_set(env, (struct dc_setting *)setting))
     {
-        path = dc_setting_path_get(setting);
+        path = dc_setting_path_get(env, setting);
     }
     else
     {
@@ -261,12 +267,12 @@ static int open_out(struct dc_setting_path *setting)
     return fd;
 }
 
-static void error_reporter(const char *file_name, const char *function_name, size_t line_number, int err)
+static void error_reporter(const struct dc_posix_env *env, const char *file_name, const char *function_name, size_t line_number, int err)
 {
     fprintf(stderr, "ERROR: %s : %s : @ %zu : %d\n", file_name, function_name, line_number, err);
 }
 
-__attribute__ ((unused)) static void trace(const char *file_name, const char *function_name, size_t line_number)
+__attribute__ ((unused)) static void trace(const struct dc_posix_env *env, const char *file_name, const char *function_name, size_t line_number)
 {
-    fprintf(stderr, "TRACE: %s : %s : @ %zu\n", file_name, function_name, line_number);
+    fprintf(stdout, "TRACE: %s : %s : @ %zu\n", file_name, function_name, line_number);
 }

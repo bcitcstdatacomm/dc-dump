@@ -2,11 +2,9 @@
 # show up in IDEs unless they are listed in add_library.
 
 set(HEADER_LIST
-        "${dc_dump_SOURCE_DIR}/include/dump.h"
         )
 
 set(SOURCE_LIST
-        "dump.c"
         "main.c"
         )
 

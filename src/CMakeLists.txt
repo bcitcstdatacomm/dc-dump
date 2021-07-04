@@ -19,9 +19,9 @@ target_link_directories(dc_dump PRIVATE /usr/local/lib)
 
 # All users of this library will need at least C11
 target_compile_features(dc_dump PUBLIC c_std_11)
-target_compile_options(dc_dump PRIVATE -g)
+target_compile_options(dc_dump PRIVATE -g -std=c11)
 target_compile_options(dc_dump PRIVATE -fstack-protector-all -ftrapv)
-target_compile_options(dc_dump PRIVATE -Wpedantic -Wall -Wextra -D_REENTRANT)
+target_compile_options(dc_dump PRIVATE -Wpedantic -Wall -Wextra)
 target_compile_options(dc_dump PRIVATE -Wdouble-promotion -Wformat-nonliteral -Wformat-security -Wformat-y2k -Wnull-dereference -Winit-self -Wmissing-include-dirs -Wswitch-default -Wswitch-enum -Wunused-local-typedefs -Wstrict-overflow=5 -Wmissing-noreturn -Walloca -Wfloat-equal -Wdeclaration-after-statement -Wshadow -Wpointer-arith -Wabsolute-value -Wundef -Wexpansion-to-defined -Wunused-macros -Wno-endif-labels -Wbad-function-cast -Wcast-qual -Wcast-align -Wwrite-strings -Wconversion -Wdangling-else -Wdate-time -Wempty-body -Wsign-conversion -Wfloat-conversion -Waggregate-return -Wstrict-prototypes -Wold-style-definition -Wmissing-prototypes -Wmissing-declarations -Wpacked -Wpadded -Wredundant-decls -Wnested-externs -Winline -Winvalid-pch -Wlong-long -Wvariadic-macros -Wdisabled-optimization -Wstack-protector -Woverlength-strings )
 
 find_library(LIBM m REQUIRED)

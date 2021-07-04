@@ -64,12 +64,13 @@ int main(int argc, char *argv[])
     struct dc_application_info *info;
     int                         ret_val;
 
-    dc_err_reset(&err);
+    dc_error_init(&err);
     dc_posix_env_init(&env, error_reporter);
 //    env.tracer = trace;
     info      = dc_application_info_create(&env, &err, "Test Application", NULL);
     ret_val   = dc_application_run(&env, &err, info, create_lifecycle, "~/.dcdump.conf", argc, argv);
     dc_application_info_destroy(&env, &info);
+    dc_error_reset(&err);
 
     return ret_val;
 }
@@ -277,6 +278,7 @@ static int open_out(const struct dc_posix_env *env, struct dc_setting_path *sett
 static void error_reporter(__attribute__ ((unused)) const struct dc_posix_env *env, const struct dc_error *err)
 {
     fprintf(stderr, "ERROR: %s : %s : @ %zu : %d\n", err->file_name, err->function_name, err->line_number, 0);
+    fprintf(stderr, "ERROR: %s\n", err->message);
 }
 
 __attribute__ ((unused)) static void trace(__attribute__ ((unused)) const struct dc_posix_env *env, const char *file_name, const char *function_name, size_t line_number)

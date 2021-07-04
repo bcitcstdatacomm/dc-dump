@@ -24,7 +24,9 @@
 #include <dc_application/options.h>
 #include <dc_util/streams.h>
 #include <dc_util/types.h>
+#include <dc_posix/string.h>
 #include <getopt.h>
+#include <unistd.h>
 // TODO get rid of the next two
 #include <sys/fcntl.h>
 #include <sys/stat.h>
@@ -32,7 +34,6 @@
 #pragma GCC diagnostic ignored "-Wunused-macros"
 #define __USE_POSIX 1
 #pragma GCC diagnostic pop
-#include <string.h>
 
 
 struct application_settings
@@ -120,7 +121,7 @@ static struct dc_application_settings *create_settings(const struct dc_posix_env
     settings->opts.opts_count = (sizeof(opts) / sizeof(struct options)) + 1;
     settings->opts.opts_size  = sizeof(struct options);
     settings->opts.opts       = dc_calloc(env, err, settings->opts.opts_count, settings->opts.opts_size);
-    memcpy(settings->opts.opts, opts, sizeof(opts));
+    dc_memcpy(env, settings->opts.opts, opts, sizeof(opts));
     settings->opts.flags = "c:vi:o:d:";
     settings->opts.env_prefix = "DC_DUMP_";
 

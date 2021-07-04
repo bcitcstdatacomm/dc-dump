@@ -16,7 +16,6 @@
  */
 
 
-#define __STDC_WANT_LIB_EXT1__ 1
 #include <dc_util/dump.h>
 #include <dc_application/command_line.h>
 #include <dc_application/environment.h>

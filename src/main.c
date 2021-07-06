@@ -157,8 +157,8 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     off_t                        max_position;
     int                          fd_dump;
     int                          fd_out;
+    struct dc_dump_info         *dump_info;
     struct dc_stream_copy_info  *copy_info;
-    struct dc_dump_info         *info;
 
     DC_TRACE(env);
     app_settings = (struct application_settings *)settings;
@@ -187,11 +187,11 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
         return -1;
     }
 
-    info      = dc_dump_info_create(env, err, STDOUT_FILENO, max_position);
-    copy_info = dc_stream_copy_info_create(env, err, NULL, dc_dump_dumper, info, NULL, NULL);
+    dump_info      = dc_dump_info_create(env, err, STDOUT_FILENO, max_position);
+    copy_info = dc_stream_copy_info_create(env, err, NULL, dc_dump_dumper, dump_info, NULL, NULL);
     dc_stream_copy(env, err, STDIN_FILENO, fd_out, 1024, copy_info);
     dc_stream_copy_info_destroy(env, &copy_info);
-    dc_dump_info_destroy(env, &info);
+    dc_dump_info_destroy(env, &dump_info);
 
     return ret_val;
 }

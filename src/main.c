@@ -47,6 +47,7 @@ struct application_settings
 
 
 static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_env *env, struct dc_error *err);
+static void destroy_lifecycle(const struct dc_posix_env *env, struct dc_application_lifecycle **plifecycle);
 static struct dc_application_settings *create_settings(const struct dc_posix_env *env, struct dc_error *err);
 static int destroy_settings(const struct dc_posix_env *env, struct dc_error *err, struct dc_application_settings **psettings);
 static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_application_settings *settings);
@@ -68,7 +69,7 @@ int main(int argc, char *argv[])
     dc_posix_env_init(&env, error_reporter);
 //    env.tracer = trace;
     info      = dc_application_info_create(&env, &err, "Test Application", NULL);
-    ret_val   = dc_application_run(&env, &err, info, create_lifecycle, "~/.dcdump.conf", argc, argv);
+    ret_val   = dc_application_run(&env, &err, info, create_lifecycle, destroy_lifecycle, "~/.dcdump.conf", argc, argv);
     dc_application_info_destroy(&env, &info);
     dc_error_reset(&err);
 
@@ -89,6 +90,14 @@ static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_e
 
     return lifecycle;
 }
+
+
+static void destroy_lifecycle(const struct dc_posix_env *env, struct dc_application_lifecycle **plifecycle)
+{
+    DC_TRACE(env);
+    dc_application_lifecycle_destroy(env, plifecycle);
+}
+
 
 static struct dc_application_settings *create_settings(const struct dc_posix_env *env, struct dc_error *err)
 {
@@ -187,7 +196,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
         return -1;
     }
 
-    dump_info      = dc_dump_info_create(env, err, STDOUT_FILENO, max_position);
+    dump_info = dc_dump_info_create(env, err, STDOUT_FILENO, max_position);
     copy_info = dc_stream_copy_info_create(env, err, NULL, dc_dump_dumper, dump_info, NULL, NULL);
     dc_stream_copy(env, err, STDIN_FILENO, fd_out, 1024, copy_info);
     dc_stream_copy_info_destroy(env, &copy_info);

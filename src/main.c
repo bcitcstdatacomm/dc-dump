@@ -24,12 +24,13 @@
 #include <dc_application/options.h>
 #include <dc_util/streams.h>
 #include <dc_util/types.h>
+#include <dc_posix/fcntl.h>
 #include <dc_posix/string.h>
+#include <dc_posix/unistd.h>
+#include <dc_posix/sys/stat.h>
 #include <getopt.h>
 #include <unistd.h>
-// TODO get rid of the next two
 #include <sys/fcntl.h>
-#include <sys/stat.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-macros"
 #define __USE_POSIX 1
@@ -51,9 +52,9 @@ static void destroy_lifecycle(const struct dc_posix_env *env, struct dc_applicat
 static struct dc_application_settings *create_settings(const struct dc_posix_env *env, struct dc_error *err);
 static int destroy_settings(const struct dc_posix_env *env, struct dc_error *err, struct dc_application_settings **psettings);
 static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_application_settings *settings);
-static off_t link_stdin(const struct dc_posix_env *env, struct dc_setting_path *setting);
-static int link_stdout(const struct dc_posix_env *env, struct dc_setting_path *setting);
-static int open_out(const struct dc_posix_env *env, struct dc_setting_path *setting);
+static off_t link_stdin(const struct dc_posix_env *env, struct dc_error *err, struct dc_setting_path *setting);
+static int link_stdout(const struct dc_posix_env *env, struct dc_error *err, struct dc_setting_path *setting);
+static int open_out(const struct dc_posix_env *env, struct dc_error *err, struct dc_setting_path *setting);
 static void error_reporter(const struct dc_posix_env *env, const struct dc_error *err);
 static void trace(const struct dc_posix_env *env, const char *file_name, const char *function_name, size_t line_number);
 
@@ -172,25 +173,25 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     DC_TRACE(env);
     app_settings = (struct application_settings *)settings;
     ret_val      = 0;
-    max_position = link_stdin(env, app_settings->input_path);
+    max_position = link_stdin(env, err, app_settings->input_path);
 
-    if(max_position < 0)
+    if(DC_HAS_ERROR(err))
     {
         fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(env, app_settings->input_path));
         return -1;
     }
 
-    fd_dump = link_stdout(env, app_settings->dump_path);
+    fd_dump = link_stdout(env, err, app_settings->dump_path);
 
-    if(fd_dump < 0)
+    if(DC_HAS_ERROR(err))
     {
         fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(env, app_settings->dump_path));
         return -1;
     }
 
-    fd_out = open_out(env, app_settings->output_path);
+    fd_out = open_out(env, err, app_settings->output_path);
 
-    if(fd_out < 0)
+    if(DC_HAS_ERROR(err))
     {
         fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(env, app_settings->input_path));
         return -1;
@@ -205,7 +206,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     return ret_val;
 }
 
-static off_t link_stdin(const struct dc_posix_env *env, struct dc_setting_path *setting)
+static off_t link_stdin(const struct dc_posix_env *env, struct dc_error *err, struct dc_setting_path *setting)
 {
     off_t max_position;
 
@@ -218,7 +219,7 @@ static off_t link_stdin(const struct dc_posix_env *env, struct dc_setting_path *
         struct stat file_info;
 
         path = dc_setting_path_get(env, setting);
-        fd   = open(path, O_RDONLY);
+        fd   = dc_open(env, err, path, O_RDONLY);
 
         if(fd < 0)
         {
@@ -226,8 +227,8 @@ static off_t link_stdin(const struct dc_posix_env *env, struct dc_setting_path *
         }
         else
         {
-            dup2(fd, STDIN_FILENO);
-            fstat(fd, &file_info);
+            dc_dup2(env, err, fd, STDIN_FILENO);
+            dc_fstat(env, err, fd, &file_info);
             max_position = file_info.st_size;
         }
     }
@@ -240,7 +241,7 @@ static off_t link_stdin(const struct dc_posix_env *env, struct dc_setting_path *
 }
 
 
-static int link_stdout(const struct dc_posix_env *env, struct dc_setting_path *setting)
+static int link_stdout(const struct dc_posix_env *env, struct dc_error *err, struct dc_setting_path *setting)
 {
     int ret_val;
 
@@ -252,18 +253,18 @@ static int link_stdout(const struct dc_posix_env *env, struct dc_setting_path *s
         const char *path;
 
         path = dc_setting_path_get(env, setting);
-        ret_val = open(path, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+        ret_val = dc_open(env, err, path, O_CREAT | O_TRUNC | O_WRONLY, 0600);
 
         if(ret_val > 0)
         {
-            dup2(ret_val, STDOUT_FILENO);
+            dc_dup2(env, err, ret_val, STDOUT_FILENO);
         }
     }
 
     return ret_val;
 }
 
-static int open_out(const struct dc_posix_env *env, struct dc_setting_path *setting)
+static int open_out(const struct dc_posix_env *env, struct dc_error *err, struct dc_setting_path *setting)
 {
     const char *path;
     int         fd;
@@ -279,7 +280,7 @@ static int open_out(const struct dc_posix_env *env, struct dc_setting_path *sett
         path = "/dev/null";
     }
 
-    fd = open(path, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+    fd = dc_open(env, err, path, O_CREAT | O_TRUNC | O_WRONLY, 0600);
 
     return fd;
 }

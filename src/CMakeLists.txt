@@ -29,6 +29,11 @@ if(LIBM)
     target_link_libraries(dc_dump ${LIBM})
 endif()
 
+find_library(LIBSOCKET socket)
+if(LIBSOCKET)
+    target_link_libraries(dc_dump ${LIBSOCKET})
+endif()
+
 find_library(LIBDC_POSIX dc_posix REQUIRED)
 if(LIBDC_POSIX)
     target_link_libraries(dc_dump ${LIBDC_POSIX})

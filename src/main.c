@@ -16,27 +16,29 @@
  */
 
 
-#include <dc_util/dump.h>
 #include <dc_application/command_line.h>
-#include <dc_application/environment.h>
 #include <dc_application/config.h>
 #include <dc_application/defaults.h>
+#include <dc_application/environment.h>
 #include <dc_application/options.h>
-#include <dc_util/streams.h>
-#include <dc_util/types.h>
 #include <dc_posix/fcntl.h>
 #include <dc_posix/string.h>
-#include <dc_posix/unistd.h>
 #include <dc_posix/sys/stat.h>
+#include <dc_posix/unistd.h>
+#include <dc_util/dump.h>
+#include <dc_util/streams.h>
+#include <dc_util/types.h>
 #include <getopt.h>
-#include <unistd.h>
 #include <sys/fcntl.h>
+#include <unistd.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-macros"
 #define __USE_POSIX 1
 #pragma GCC diagnostic pop
 
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpadded"
 struct application_settings
 {
     struct dc_opt_settings opts;
@@ -44,7 +46,8 @@ struct application_settings
     struct dc_setting_path *input_path;
     struct dc_setting_path *output_path;
     struct dc_setting_path *dump_path;
-};
+} __attribute__((aligned(128)));
+#pragma GCC diagnostic pop
 
 
 static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_env *env, struct dc_error *err);

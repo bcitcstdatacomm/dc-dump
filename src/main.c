@@ -31,10 +31,6 @@
 #include <getopt.h>
 #include <sys/fcntl.h>
 #include <unistd.h>
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-macros"
-// #define __USE_POSIX 1
-#pragma GCC diagnostic pop
 
 
 #pragma GCC diagnostic push

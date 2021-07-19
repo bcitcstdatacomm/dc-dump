@@ -21,10 +21,10 @@
 #include <dc_application/defaults.h>
 #include <dc_application/environment.h>
 #include <dc_application/options.h>
-#include <dc_posix/fcntl.h>
-#include <dc_posix/string.h>
-#include <dc_posix/sys/stat.h>
-#include <dc_posix/unistd.h>
+#include <dc_posix/dc_fcntl.h>
+#include <dc_posix/dc_string.h>
+#include <dc_posix/dc_unistd.h>
+#include <dc_posix/sys/dc_stat.h>
 #include <dc_util/dump.h>
 #include <dc_util/streams.h>
 #include <dc_util/types.h>
@@ -33,7 +33,7 @@
 #include <unistd.h>
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-macros"
-#define __USE_POSIX 1
+// #define __USE_POSIX 1
 #pragma GCC diagnostic pop
 
 
@@ -178,7 +178,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     ret_val      = 0;
     max_position = link_stdin(env, err, app_settings->input_path);
 
-    if(DC_HAS_ERROR(err))
+    if(dc_error_has_error(err))
     {
         fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(env, app_settings->input_path));
         return -1;
@@ -186,7 +186,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
 
     fd_dump = link_stdout(env, err, app_settings->dump_path);
 
-    if(DC_HAS_ERROR(err))
+    if(dc_error_has_error(err))
     {
         fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(env, app_settings->dump_path));
         return -1;
@@ -194,7 +194,7 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
 
     fd_out = open_out(env, err, app_settings->output_path);
 
-    if(DC_HAS_ERROR(err))
+    if(dc_error_has_error(err))
     {
         fprintf(stderr, "Can't open file %s\n", dc_setting_path_get(env, app_settings->input_path));
         return -1;
@@ -222,7 +222,7 @@ static off_t link_stdin(const struct dc_posix_env *env, struct dc_error *err, st
         struct stat file_info;
 
         path = dc_setting_path_get(env, setting);
-        fd   = dc_open(env, err, path, O_RDONLY);
+        fd   = dc_open(env, err, path, O_RDONLY, 0);
 
         if(fd < 0)
         {
@@ -256,7 +256,7 @@ static int link_stdout(const struct dc_posix_env *env, struct dc_error *err, str
         const char *path;
 
         path = dc_setting_path_get(env, setting);
-        ret_val = dc_open(env, err, path, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+        ret_val = dc_open(env, err, path, DC_O_CREAT | DC_O_TRUNC | DC_O_WRONLY, DC_S_IRUSR | DC_S_IWUSR);
 
         if(ret_val > 0)
         {
@@ -283,7 +283,7 @@ static int open_out(const struct dc_posix_env *env, struct dc_error *err, struct
         path = "/dev/null";
     }
 
-    fd = dc_open(env, err, path, O_CREAT | O_TRUNC | O_WRONLY, 0600);
+    fd = dc_open(env, err, path, DC_O_CREAT | DC_O_TRUNC | DC_O_WRONLY, 0600);
 
     return fd;
 }

@@ -31,8 +31,6 @@
 #include <sys/fcntl.h>
 #include <unistd.h>
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpadded"
 struct application_settings
 {
     struct dc_opt_settings  opts;
@@ -40,8 +38,7 @@ struct application_settings
     struct dc_setting_path *input_path;
     struct dc_setting_path *output_path;
     struct dc_setting_path *dump_path;
-} __attribute__((aligned(128)));
-#pragma GCC diagnostic                  pop
+};
 
 static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_env *env, struct dc_error *err);
 static void destroy_lifecycle(const struct dc_posix_env *env, struct dc_application_lifecycle **plifecycle);

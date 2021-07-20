@@ -1,13 +1,6 @@
 # Note that headers are optional, and do not affect add_library, but they will not
 # show up in IDEs unless they are listed in add_library.
 
-set(HEADER_LIST
-        )
-
-set(SOURCE_LIST
-        "main.c"
-        )
-
 add_definitions( -D_POSIX_C_SOURCE=200809L -D_XOPEN_SOURCE=700 )
 
 if(APPLE)
@@ -78,3 +71,11 @@ source_group(
         PREFIX "Header Files"
         FILES ${HEADER_LIST}
 )
+add_custom_target(
+        format
+        COMMAND clang-format
+        -i
+        ${HEADER_LIST}
+        ${SOURCE_LIST}
+)
+

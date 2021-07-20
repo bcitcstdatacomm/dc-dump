@@ -15,7 +15,6 @@
  *  along with dc_dump.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-
 #include <dc_application/command_line.h>
 #include <dc_application/config.h>
 #include <dc_application/defaults.h>
@@ -32,33 +31,31 @@
 #include <sys/fcntl.h>
 #include <unistd.h>
 
-
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpadded"
 struct application_settings
 {
-    struct dc_opt_settings opts;
+    struct dc_opt_settings  opts;
     struct dc_setting_bool *verbose;
     struct dc_setting_path *input_path;
     struct dc_setting_path *output_path;
     struct dc_setting_path *dump_path;
 } __attribute__((aligned(128)));
-#pragma GCC diagnostic pop
-
+#pragma GCC diagnostic                  pop
 
 static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_env *env, struct dc_error *err);
 static void destroy_lifecycle(const struct dc_posix_env *env, struct dc_application_lifecycle **plifecycle);
 static struct dc_application_settings *create_settings(const struct dc_posix_env *env, struct dc_error *err);
-static int destroy_settings(const struct dc_posix_env *env, struct dc_error *err, struct dc_application_settings **psettings);
-static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_application_settings *settings);
+static int
+destroy_settings(const struct dc_posix_env *env, struct dc_error *err, struct dc_application_settings **psettings);
+static int   run(const struct dc_posix_env *env, struct dc_error *err, struct dc_application_settings *settings);
 static off_t link_stdin(const struct dc_posix_env *env, struct dc_error *err, struct dc_setting_path *setting);
-static int link_stdout(const struct dc_posix_env *env, struct dc_error *err, struct dc_setting_path *setting);
-static int open_out(const struct dc_posix_env *env, struct dc_error *err, struct dc_setting_path *setting);
-static void error_reporter(const struct dc_posix_env *env, const struct dc_error *err);
+static int   link_stdout(const struct dc_posix_env *env, struct dc_error *err, struct dc_setting_path *setting);
+static int   open_out(const struct dc_posix_env *env, struct dc_error *err, struct dc_setting_path *setting);
+static void  error_reporter(const struct dc_posix_env *env, const struct dc_error *err);
 static void trace(const struct dc_posix_env *env, const char *file_name, const char *function_name, size_t line_number);
 
-
-int main(int argc, char *argv[])
+int         main(int argc, char *argv[])
 {
     struct dc_posix_env         env;
     struct dc_error             err;
@@ -67,15 +64,14 @@ int main(int argc, char *argv[])
 
     dc_error_init(&err);
     dc_posix_env_init(&env, error_reporter);
-//    env.tracer = trace;
-    info      = dc_application_info_create(&env, &err, "Test Application", NULL);
-    ret_val   = dc_application_run(&env, &err, info, create_lifecycle, destroy_lifecycle, "~/.dcdump.conf", argc, argv);
+    //    env.tracer = trace;
+    info    = dc_application_info_create(&env, &err, "Test Application", NULL);
+    ret_val = dc_application_run(&env, &err, info, create_lifecycle, destroy_lifecycle, "~/.dcdump.conf", argc, argv);
     dc_application_info_destroy(&env, &info);
     dc_error_reset(&err);
 
     return ret_val;
 }
-
 
 static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_env *env, struct dc_error *err)
 {
@@ -91,13 +87,11 @@ static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_e
     return lifecycle;
 }
 
-
 static void destroy_lifecycle(const struct dc_posix_env *env, struct dc_application_lifecycle **plifecycle)
 {
     DC_TRACE(env);
     dc_application_lifecycle_destroy(env, plifecycle);
 }
-
 
 static struct dc_application_settings *create_settings(const struct dc_posix_env *env, struct dc_error *err)
 {
@@ -118,13 +112,57 @@ static struct dc_application_settings *create_settings(const struct dc_posix_env
     settings->output_path             = dc_setting_path_create(env, err);
     settings->dump_path               = dc_setting_path_create(env, err);
 
-    struct options opts[] =
-    {
-        { (struct dc_setting *)settings->opts.parent.config_path, dc_options_set_path, "config",  required_argument, 'c', "CONFIG",  dc_string_from_string, NULL,      dc_string_from_config, NULL             },
-        { (struct dc_setting *)settings->verbose,                 dc_options_set_bool, "verbose", no_argument,       'v', "VERBOSE", dc_flag_from_string,   "verbose", dc_flag_from_config,   &default_verbose },
-        { (struct dc_setting *)settings->input_path,              dc_options_set_path, "in",      required_argument, 'i', "IN",      dc_string_from_string, "in",      dc_string_from_config, NULL             },
-        { (struct dc_setting *)settings->output_path,             dc_options_set_path, "out",     required_argument, 'o', "OUT",     dc_string_from_string, "out",     dc_string_from_config, NULL             },
-        { (struct dc_setting *)settings->dump_path,               dc_options_set_path, "dump",    required_argument, 'd', "DUMP",    dc_string_from_string, "dump",    dc_string_from_config, NULL             },
+    struct options opts[]             = {
+        {(struct dc_setting *)settings->opts.parent.config_path,
+         dc_options_set_path,
+         "config",
+         required_argument,
+         'c',
+         "CONFIG",
+         dc_string_from_string,
+         NULL,
+         dc_string_from_config,
+         NULL},
+        {(struct dc_setting *)settings->verbose,
+         dc_options_set_bool,
+         "verbose",
+         no_argument,
+         'v',
+         "VERBOSE",
+         dc_flag_from_string,
+         "verbose",
+         dc_flag_from_config,
+         &default_verbose},
+        {(struct dc_setting *)settings->input_path,
+         dc_options_set_path,
+         "in",
+         required_argument,
+         'i',
+         "IN",
+         dc_string_from_string,
+         "in",
+         dc_string_from_config,
+         NULL},
+        {(struct dc_setting *)settings->output_path,
+         dc_options_set_path,
+         "out",
+         required_argument,
+         'o',
+         "OUT",
+         dc_string_from_string,
+         "out",
+         dc_string_from_config,
+         NULL},
+        {(struct dc_setting *)settings->dump_path,
+         dc_options_set_path,
+         "dump",
+         required_argument,
+         'd',
+         "DUMP",
+         dc_string_from_string,
+         "dump",
+         dc_string_from_config,
+         NULL},
     };
 
     // note the trick here - we use calloc and add 1 to ensure the last line is all 0/NULL
@@ -132,13 +170,15 @@ static struct dc_application_settings *create_settings(const struct dc_posix_env
     settings->opts.opts_size  = sizeof(struct options);
     settings->opts.opts       = dc_calloc(env, err, settings->opts.opts_count, settings->opts.opts_size);
     dc_memcpy(env, settings->opts.opts, opts, sizeof(opts));
-    settings->opts.flags = "c:vi:o:d:";
+    settings->opts.flags      = "c:vi:o:d:";
     settings->opts.env_prefix = "DC_DUMP_";
 
     return (struct dc_application_settings *)settings;
 }
 
-static int destroy_settings(const struct dc_posix_env *env, __attribute__ ((unused)) struct dc_error *err, struct dc_application_settings **psettings)
+static int destroy_settings(const struct dc_posix_env *              env,
+                            __attribute__((unused)) struct dc_error *err,
+                            struct dc_application_settings **        psettings)
 {
     struct application_settings *app_settings;
 
@@ -166,8 +206,8 @@ static int run(const struct dc_posix_env *env, struct dc_error *err, struct dc_a
     off_t                        max_position;
     int                          fd_dump;
     int                          fd_out;
-    struct dc_dump_info         *dump_info;
-    struct dc_stream_copy_info  *copy_info;
+    struct dc_dump_info *        dump_info;
+    struct dc_stream_copy_info * copy_info;
 
     DC_TRACE(env);
     app_settings = (struct application_settings *)settings;
@@ -239,7 +279,6 @@ static off_t link_stdin(const struct dc_posix_env *env, struct dc_error *err, st
     return max_position;
 }
 
-
 static int link_stdout(const struct dc_posix_env *env, struct dc_error *err, struct dc_setting_path *setting)
 {
     int ret_val;
@@ -251,7 +290,7 @@ static int link_stdout(const struct dc_posix_env *env, struct dc_error *err, str
     {
         const char *path;
 
-        path = dc_setting_path_get(env, setting);
+        path    = dc_setting_path_get(env, setting);
         ret_val = dc_open(env, err, path, DC_O_CREAT | DC_O_TRUNC | DC_O_WRONLY, DC_S_IRUSR | DC_S_IWUSR);
 
         if(ret_val > 0)
@@ -284,13 +323,16 @@ static int open_out(const struct dc_posix_env *env, struct dc_error *err, struct
     return fd;
 }
 
-static void error_reporter(__attribute__ ((unused)) const struct dc_posix_env *env, const struct dc_error *err)
+static void error_reporter(__attribute__((unused)) const struct dc_posix_env *env, const struct dc_error *err)
 {
     fprintf(stderr, "ERROR: %s : %s : @ %zu : %d\n", err->file_name, err->function_name, err->line_number, 0);
     fprintf(stderr, "ERROR: %s\n", err->message);
 }
 
-__attribute__ ((unused)) static void trace(__attribute__ ((unused)) const struct dc_posix_env *env, const char *file_name, const char *function_name, size_t line_number)
+__attribute__((unused)) static void trace(__attribute__((unused)) const struct dc_posix_env *env,
+                                          const char *                                       file_name,
+                                          const char *                                       function_name,
+                                          size_t                                             line_number)
 {
     fprintf(stdout, "TRACE: %s : %s : @ %zu\n", file_name, function_name, line_number);
 }

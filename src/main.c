@@ -40,10 +40,6 @@ struct application_settings
     struct dc_setting_path *dump_path;
 };
 
-static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_env *env, struct dc_error *err);
-
-static void destroy_lifecycle(const struct dc_posix_env *env, struct dc_application_lifecycle **plifecycle);
-
 static struct dc_application_settings *create_settings(const struct dc_posix_env *env, struct dc_error *err);
 
 static int
@@ -63,40 +59,24 @@ static void trace(const struct dc_posix_env *env, const char *file_name, const c
 
 int main(int argc, char *argv[])
 {
+    dc_posix_tracer tracer;
+    dc_error_reporter reporter;
     struct dc_posix_env env;
     struct dc_error err;
     struct dc_application_info *info;
     int ret_val;
 
-    dc_error_init(&err, error_reporter);
-    dc_posix_env_init(&env, NULL);
+    reporter = error_reporter;
+    tracer = NULL;
+    dc_error_init(&err, reporter);
+    dc_posix_env_init(&env, tracer);
     //    env.tracer = trace;
-    info = dc_application_info_create(&env, &err, "Test Application", NULL);
-    ret_val = dc_application_run(&env, &err, info, create_lifecycle, destroy_lifecycle, "~/.dcdump.conf", argc, argv);
+    info = dc_application_info_create(&env, &err, "dcdump");
+    ret_val = dc_application_run(&env, &err, info, create_settings, destroy_settings, run, dc_default_create_lifecycle, dc_default_destroy_lifecycle, "~/.dcdump.conf", argc, argv);
     dc_application_info_destroy(&env, &info);
     dc_error_reset(&err);
 
     return ret_val;
-}
-
-static struct dc_application_lifecycle *create_lifecycle(const struct dc_posix_env *env, struct dc_error *err)
-{
-    struct dc_application_lifecycle *lifecycle;
-
-    DC_TRACE(env);
-    lifecycle = dc_application_lifecycle_create(env, err, create_settings, destroy_settings, run);
-    dc_application_lifecycle_set_parse_command_line(env, lifecycle, dc_default_parse_command_line);
-    dc_application_lifecycle_set_read_env_vars(env, lifecycle, dc_default_read_env_vars);
-    dc_application_lifecycle_set_read_config(env, lifecycle, dc_default_load_config);
-    dc_application_lifecycle_set_set_defaults(env, lifecycle, dc_default_set_defaults);
-
-    return lifecycle;
-}
-
-static void destroy_lifecycle(const struct dc_posix_env *env, struct dc_application_lifecycle **plifecycle)
-{
-    DC_TRACE(env);
-    dc_application_lifecycle_destroy(env, plifecycle);
 }
 
 static struct dc_application_settings *create_settings(const struct dc_posix_env *env, struct dc_error *err)

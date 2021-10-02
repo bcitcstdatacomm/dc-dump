@@ -154,7 +154,7 @@ static struct dc_application_settings *create_settings(const struct dc_posix_env
     settings->opts.opts_size = sizeof(struct options);
     settings->opts.opts = dc_calloc(env, err, settings->opts.opts_count, settings->opts.opts_size);
     dc_memcpy(env, settings->opts.opts, opts, sizeof(opts));
-    settings->opts.flags = "c:vi:o:d:";
+    settings->opts.flags = "c:o:vi:d:";
     settings->opts.env_prefix = "DC_DUMP_";
 
     return (struct dc_application_settings *)settings;

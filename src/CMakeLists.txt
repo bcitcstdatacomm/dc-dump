@@ -54,19 +54,19 @@ if (LIBSOCKET)
 endif ()
 
 if(LIB_PTHREAD)
-    target_link_libraries(dc_dump PUBLIC ${LIB_PTHREAD})
+    target_link_libraries(dc_dump PRIVATE ${LIB_PTHREAD})
 endif()
 
 if(LIB_CRYPT)
-    target_link_libraries(dc_dump PUBLIC ${LIB_CRYPT})
+    target_link_libraries(dc_dump PRIVATE ${LIB_CRYPT})
 endif()
 
 if(LIB_GDBM)
-    target_link_libraries(dc_dump PUBLIC ${LIB_GDBM})
+    target_link_libraries(dc_dump PRIVATE ${LIB_GDBM})
 endif()
 
 if(LIB_GDBM_COMPAT)
-    target_link_libraries(dc_dump PUBLIC ${LIB_GDBM})
+    target_link_libraries(dc_dump PRIVATE ${LIB_GDBM})
 endif()
 
 set_target_properties(dc_dump PROPERTIES OUTPUT_NAME "dcdump")

@@ -62,7 +62,7 @@ if(LIB_GDBM)
 endif()
 
 if(LIB_GDBM_COMPAT)
-    target_link_libraries(dc_dump PRIVATE ${LIB_GDBM})
+    target_link_libraries(dc_dump PRIVATE ${LIB_GDBM_COMPAT})
 endif()
 
 target_link_libraries(dc_dump PRIVATE ${LIBDC_ERROR})

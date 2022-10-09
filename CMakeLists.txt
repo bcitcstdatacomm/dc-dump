@@ -1,62 +1,168 @@
-# https://gitlab.com/CLIUtils/modern-cmake/-/blob/master/examples/extended-project/CMakeLists.txt
+cmake_minimum_required(VERSION 3.22)
 
-cmake_minimum_required(VERSION 3.21)
-
-# Project name and a few useful settings. Other commands can pick up the results
-project(
-        dc_dump
-        VERSION 0.1
+project(dc_dump
+        VERSION 0.2.1
         DESCRIPTION ""
         LANGUAGES C)
 
-set(HEADER_LIST
-        )
+set(CMAKE_C_STANDARD 17)
 
-set(SOURCE_LIST
-        "${dc_dump_SOURCE_DIR}/src/main.c"
-        )
+set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/src)
+set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+set(SOURCE_LIST ${SOURCE_DIR}/main.c)
+set(HEADER_LIST "")
 
-### Require out-of-source builds
-# this still creates a CMakeFiles directory and CMakeCache.txt- can we delete them?
-file(TO_CMAKE_PATH "${PROJECT_BINARY_DIR}/CMakeLists.txt" LOC_PATH)
-if (EXISTS "${LOC_PATH}")
-    message(FATAL_ERROR "You cannot build in a source directory (or any directory with a CMakeLists.txt file). Please make a build subdirectory. Feel free to remove CMakeCache.txt and CMakeFiles.")
+set(SANITIZE TRUE)
+
+add_compile_definitions(_POSIX_C_SOURCE=200809L)
+add_compile_definitions(_XOPEN_SOURCE=700)
+add_definitions(-D_DEFAULT_SOURCE)
+
+if (APPLE)
+    add_definitions(-D_DARWIN_C_SOURCE)
 endif ()
 
-# Only do these if this is the main project, and not if it is included through add_subdirectory
-if (CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+include_directories(${INCLUDE_DIR})
+add_compile_options("-Wall"
+        "-Wextra"
+        "-Wpedantic"
+        "-Wshadow"
+        "-Wstrict-overflow=4"
+        "-Wswitch-default"
+        "-Wswitch-enum"
+        "-Wunused"
+        "-Wunused-macros"
+        "-Wdate-time"
+        "-Winvalid-pch"
+        "-Wmissing-declarations"
+        "-Wmissing-include-dirs"
+        "-Wmissing-prototypes"
+        "-Wstrict-prototypes"
+        "-Wundef"
+        "-Wnull-dereference"
+        "-Wstack-protector"
+        "-Wdouble-promotion"
+        "-Wvla"
+        "-Walloca"
+        "-Woverlength-strings"
+        "-Wdisabled-optimization"
+        "-Winline"
+        "-Wcast-qual"
+        "-Wfloat-equal"
+        "-Wformat=2"
+        "-Wfree-nonheap-object"
+        "-Wshift-overflow"
+        "-Wwrite-strings")
 
-    # Optionally set things like CMAKE_CXX_STANDARD, CMAKE_POSITION_INDEPENDENT_CODE here
-    set(CMAKE_C_STANDARD 11)
-    set(CMAKE_C_EXTENSIONS OFF)
+if (${SANITIZE})
+    add_compile_options("-fsanitize=address")
+    add_compile_options("-fsanitize=undefined")
+    add_compile_options("-fsanitize-address-use-after-scope")
+    add_compile_options("-fstack-protector-all")
+    add_compile_options("-fdelete-null-pointer-checks")
+    add_compile_options("-fno-omit-frame-pointer")
 
-    # Let's nicely support folders in IDEs
-    set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-    # Testing only available if this is the main app
-    # Note this needs to be done in the main CMakeLists
-    # since it calls enable_testing, which must be in the
-    # main CMakeLists.
-    include(CTest)
-
-    # Docs only available if this is the main app
-    find_package(Doxygen)
-    if (Doxygen_FOUND)
-        add_subdirectory(docs)
-    else ()
-        message(STATUS "Doxygen not found, not building docs")
+    if (NOT APPLE)
+        add_compile_options("-fsanitize=leak")
     endif ()
+
+    add_link_options("-fsanitize=address")
+    add_link_options("-fsanitize=bounds")
 endif ()
 
-# The compiled library code is here
-add_subdirectory(src)
+if ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
+    #    add_compile_options("-O2")
+    add_compile_options("-Wcast-align"
+            "-Wunsuffixed-float-constants"
+            "-Warith-conversion"
+            "-Wcast-align=strict"
+            "-Wunsafe-loop-optimizations"
+            "-Wvector-operation-performance"
+            "-Walloc-zero"
+            "-Wtrampolines"
+            "-Wtsan"
+            "-Wformat-overflow=2"
+            "-Wformat-signedness"
+            "-Wjump-misses-init"
+            "-Wformat-truncation=2")
+elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "Clang")
+endif ()
 
-# The executable code is here
-# add_subdirectory(apps)
+find_package(Doxygen
+        REQUIRED
+        REQUIRED dot
+        OPTIONAL_COMPONENTS mscgen dia)
+
+set(DOXYGEN_ALWAYS_DETAILED_SEC YES)
+set(DOXYGEN_REPEAT_BRIEF YES)
+set(DOXYGEN_EXTRACT_ALL YES)
+set(DOXYGEN_JAVADOC_AUTOBRIEF YES)
+set(DOXYGEN_OPTIMIZE_OUTPUT_FOR_C YES)
+set(DOXYGEN_GENERATE_HTML YES)
+set(DOXYGEN_WARNINGS YES)
+set(DOXYGEN_QUIET YES)
+
+doxygen_add_docs(doxygen
+        ${HEADER_LIST}
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        COMMENT "Generating Doxygen documentation for x")
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CLANG_TIDY_CHECKS "*")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-llvmlibc-restrict-system-libc-headers")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-misc-unused-parameters")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-unused-parameter")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-unused-variable")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-cppcoreguidelines-init-variables")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-readability-identifier-length")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-unused-but-set-variable")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-analyzer-deadcode.DeadStores")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-altera-id-dependent-backward-branch")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-cert-dcl03-c")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-hicpp-static-assert")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-misc-static-assert")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-altera-unroll-loops")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-altera-struct-pack-align")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-analyzer-security.insecureAPI.strcpy")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-bugprone-easily-swappable-parameters")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-android-cloexec-open")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-android-cloexec-accept")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-unused-function")
+set(CMAKE_C_CLANG_TIDY clang-tidy -checks=${CLANG_TIDY_CHECKS};--quiet)
+
+add_executable(dc_dump ${SOURCE_LIST} ${HEADER_LIST})
+target_include_directories(dc_dump PRIVATE include)
+target_include_directories(dc_dump PRIVATE /usr/include)
+target_include_directories(dc_dump PRIVATE /usr/local/include)
+target_link_directories(dc_dump PRIVATE /usr/local/lib)
+
+set_target_properties(dc_dump PROPERTIES
+        VERSION ${PROJECT_VERSION}
+        SOVERSION ${PROJECT_VERSION_MAJOR})
+
+find_library(LIBDC_ERROR dc_error REQUIRED)
+find_library(LIBDC_POSIX dc_posix REQUIRED)
+find_library(LIBDC_UTIL dc_util REQUIRED)
+find_library(LIBDC_FSM dc_fsm REQUIRED)
+find_library(LIB_CONFIG config REQUIRED)
+find_library(LIBDC_APPLICATION dc_application REQUIRED)
+
+target_link_libraries(dc_dump PUBLIC ${LIBDC_ERROR})
+target_link_libraries(dc_dump PUBLIC ${LIBDC_POSIX})
+target_link_libraries(dc_dump PUBLIC ${LIBDC_UTIL})
+target_link_libraries(dc_dump PUBLIC ${LIBDC_FSM})
+target_link_libraries(dc_dump PUBLIC ${LIB_CONFIG})
+target_link_libraries(dc_dump PUBLIC ${LIBDC_APPLICATION})
+
+set_target_properties(dc_dump PROPERTIES OUTPUT_NAME "dcdump")
+install(TARGETS dc_dump DESTINATION bin)
+
+add_dependencies(dc_dump doxygen)
+
+#find_library(LIBCGREEN cgreen)
 
 # Testing only available if this is the main app
-# Emergency override MODERN_CMAKE_BUILD_TESTING provided as well
-if ((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME OR MODERN_CMAKE_BUILD_TESTING)
-        AND BUILD_TESTING)
-    #    add_subdirectory(tests)
-endif ()
+#if ((CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME) AND BUILD_TESTING AND LIBCGREEN)
+# add_subdirectory(tests)
+#endif ()

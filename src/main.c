@@ -63,7 +63,19 @@ int main(int argc, char *argv[])
 
     tracer = NULL;
     err = dc_error_create(true);
+
+    if(err == NULL)
+    {
+        goto ERROR_CREATE;
+    }
+
     env = dc_posix_env_create(err, true, tracer);
+
+    if(dc_error_has_error(err))
+    {
+        goto ENV_CREATE;
+    }
+
     //    env.tracer = trace;
     info = dc_application_info_create(env, err, "dcdump");
     ret_val = dc_application_run(env,
@@ -78,7 +90,11 @@ int main(int argc, char *argv[])
                                  argc,
                                  argv);
     dc_application_info_destroy(env, &info);
+    free(env);
+    ENV_CREATE:
     dc_error_reset(err);
+    free(err);
+    ERROR_CREATE:
 
     return ret_val;
 }
@@ -309,6 +325,9 @@ static int open_out(const struct dc_posix_env *env, struct dc_error *err, struct
     return fd;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wunused-function"
 static void trace(const struct dc_posix_env *env,
                   const char *file_name,
                   const char *function_name,
@@ -316,3 +335,4 @@ static void trace(const struct dc_posix_env *env,
 {
     fprintf(stdout, "TRACE: %s : %s : @ %zu\n", file_name, function_name, line_number);     // NOLINT(cert-err33-c)
 }
+#pragma GCC diagnostic pop

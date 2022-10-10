@@ -56,12 +56,10 @@ static void trace(const struct dc_posix_env *env, const char *file_name, const c
 int main(int argc, char *argv[])
 {
     struct dc_error *err;
-    dc_posix_tracer tracer;
     struct dc_posix_env *env;
     struct dc_application_info *info;
     int ret_val;
 
-    tracer = NULL;
     err = dc_error_create(true);
 
     if(err == NULL)
@@ -69,14 +67,13 @@ int main(int argc, char *argv[])
         goto ERROR_CREATE;
     }
 
-    env = dc_posix_env_create(err, true, tracer);
+    env = dc_posix_env_create(err, true, NULL);
 
     if(dc_error_has_error(err))
     {
         goto ENV_CREATE;
     }
 
-    //    env.tracer = trace;
     info = dc_application_info_create(env, err, "dcdump");
     ret_val = dc_application_run(env,
                                  err,

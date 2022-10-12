@@ -143,6 +143,12 @@ endif ()
 
 add_executable(dc-dump ${SOURCE_LIST} ${HEADER_LIST})
 target_include_directories(dc-dump PRIVATE include)
+target_include_directories(dc-dump PRIVATE /usr/local/include)
+target_link_directories(dc-dump PRIVATE /usr/local/lib)
+
+if (NOT APPLE)
+    target_include_directories(dc-dump PRIVATE /usr/include)
+endif ()
 
 set_target_properties(dc-dump PROPERTIES
         VERSION ${PROJECT_VERSION}

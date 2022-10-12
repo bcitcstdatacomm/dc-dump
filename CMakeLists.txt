@@ -1,22 +1,23 @@
 cmake_minimum_required(VERSION 3.22)
 
-project(dc_dump
+project(dc-dump
         VERSION 0.2.1
         DESCRIPTION ""
         LANGUAGES C)
 
 set(CMAKE_C_STANDARD 17)
 
+set(SANITIZE TRUE)
+
 set(SOURCE_DIR ${PROJECT_SOURCE_DIR}/src)
 set(INCLUDE_DIR ${PROJECT_SOURCE_DIR}/include)
+
 set(SOURCE_LIST ${SOURCE_DIR}/main.c)
 set(HEADER_LIST "")
 
-set(SANITIZE TRUE)
-
 add_compile_definitions(_POSIX_C_SOURCE=200809L)
 add_compile_definitions(_XOPEN_SOURCE=700)
-add_definitions(-D_DEFAULT_SOURCE)
+add_compile_definitions(_GNU_SOURCE)
 
 if (APPLE)
     add_definitions(-D_DARWIN_C_SOURCE)
@@ -72,10 +73,8 @@ endif ()
 
 if ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
     #    add_compile_options("-O2")
-    add_compile_options("-Wcast-align"
-            "-Wunsuffixed-float-constants"
+    add_compile_options("-Wunsuffixed-float-constants"
             "-Warith-conversion"
-            "-Wcast-align=strict"
             "-Wunsafe-loop-optimizations"
             "-Wvector-operation-performance"
             "-Walloc-zero"
@@ -105,39 +104,47 @@ set(DOXYGEN_QUIET YES)
 doxygen_add_docs(doxygen
         ${HEADER_LIST}
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-        COMMENT "Generating Doxygen documentation for x")
+        COMMENT "Generating Doxygen documentation for dc-dump")
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CLANG_TIDY_CHECKS "*")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-llvmlibc-restrict-system-libc-headers")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-misc-unused-parameters")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-altera-id-dependent-backward-branch")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-altera-struct-pack-align")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-altera-unroll-loops")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-android-cloexec-accept")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-android-cloexec-dup")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-android-cloexec-open")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-bugprone-easily-swappable-parameters")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-cert-dcl03-c")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-analyzer-deadcode.DeadStores")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-analyzer-security.insecureAPI.strcpy")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-cast-align")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-incompatible-pointer-types-discards-qualifiers")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-unknown-warning-option")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-unused-but-set-variable")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-unused-function")
 set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-unused-parameter")
 set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-unused-variable")
 set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-cppcoreguidelines-init-variables")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-readability-identifier-length")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-unused-but-set-variable")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-analyzer-deadcode.DeadStores")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-altera-id-dependent-backward-branch")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-cert-dcl03-c")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-google-readability-todo")
 set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-hicpp-static-assert")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-llvmlibc-restrict-system-libc-headers")
 set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-misc-static-assert")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-altera-unroll-loops")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-altera-struct-pack-align")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-analyzer-security.insecureAPI.strcpy")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-bugprone-easily-swappable-parameters")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-android-cloexec-open")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-android-cloexec-accept")
-set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-clang-diagnostic-unused-function")
-set(CMAKE_C_CLANG_TIDY clang-tidy -checks=${CLANG_TIDY_CHECKS};--quiet)
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-misc-unused-parameters")
+set(CLANG_TIDY_CHECKS "${CLANG_TIDY_CHECKS},-readability-identifier-length")
 
-add_executable(dc_dump ${SOURCE_LIST} ${HEADER_LIST})
-target_include_directories(dc_dump PRIVATE include)
-target_include_directories(dc_dump PRIVATE /usr/include)
-target_include_directories(dc_dump PRIVATE /usr/local/include)
-target_link_directories(dc_dump PRIVATE /usr/local/lib)
+if (APPLE)
+    # TODO: find a better way so this is not hard-coded
+    set(CMAKE_C_CLANG_TIDY clang-tidy -extra-arg=-I/Library/Developer/CommandLineTools/usr/lib/14.0.0/include -checks=${CLANG_TIDY_CHECKS};--quiet)
+else ()
+    set(CMAKE_C_CLANG_TIDY clang-tidy -checks=${CLANG_TIDY_CHECKS};--quiet)
+endif ()
 
-set_target_properties(dc_dump PROPERTIES
+add_executable(dc-dump ${SOURCE_LIST} ${HEADER_LIST})
+target_include_directories(dc-dump PRIVATE include)
+
+set_target_properties(dc-dump PROPERTIES
         VERSION ${PROJECT_VERSION}
         SOVERSION ${PROJECT_VERSION_MAJOR})
 
@@ -148,17 +155,17 @@ find_library(LIBDC_FSM dc_fsm REQUIRED)
 find_library(LIB_CONFIG config REQUIRED)
 find_library(LIBDC_APPLICATION dc_application REQUIRED)
 
-target_link_libraries(dc_dump PUBLIC ${LIBDC_ERROR})
-target_link_libraries(dc_dump PUBLIC ${LIBDC_POSIX})
-target_link_libraries(dc_dump PUBLIC ${LIBDC_UTIL})
-target_link_libraries(dc_dump PUBLIC ${LIBDC_FSM})
-target_link_libraries(dc_dump PUBLIC ${LIB_CONFIG})
-target_link_libraries(dc_dump PUBLIC ${LIBDC_APPLICATION})
+target_link_libraries(dc-dump PUBLIC ${LIBDC_ERROR})
+target_link_libraries(dc-dump PUBLIC ${LIBDC_POSIX})
+target_link_libraries(dc-dump PUBLIC ${LIBDC_UTIL})
+target_link_libraries(dc-dump PUBLIC ${LIBDC_FSM})
+target_link_libraries(dc-dump PUBLIC ${LIB_CONFIG})
+target_link_libraries(dc-dump PUBLIC ${LIBDC_APPLICATION})
 
-set_target_properties(dc_dump PROPERTIES OUTPUT_NAME "dcdump")
-install(TARGETS dc_dump DESTINATION bin)
+set_target_properties(dc-dump PROPERTIES OUTPUT_NAME "dcdump")
+install(TARGETS dc-dump DESTINATION bin)
 
-add_dependencies(dc_dump doxygen)
+add_dependencies(dc-dump doxygen)
 
 #find_library(LIBCGREEN cgreen)
 

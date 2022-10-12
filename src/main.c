@@ -64,6 +64,7 @@ int main(int argc, char *argv[])
 
     if(err == NULL)
     {
+        ret_val = EXIT_FAILURE;
         goto ERROR_CREATE;
     }
 
@@ -71,6 +72,7 @@ int main(int argc, char *argv[])
 
     if(dc_error_has_error(err))
     {
+        ret_val = EXIT_FAILURE;
         goto ENV_CREATE;
     }
 

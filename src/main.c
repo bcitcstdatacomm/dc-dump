@@ -16,7 +16,6 @@
  */
 
 
-#include <dc_application/command_line.h>
 #include <dc_application/config.h>
 #include <dc_application/options.h>
 #include <dc_c/dc_stdlib.h>
@@ -86,7 +85,7 @@ int main(int argc, char *argv[])
     free(env);
     ENV_CREATE:
     dc_error_reset(err);
-    free(err);
+    dc_free(env, err);
     ERROR_CREATE:
 
     return ret_val;

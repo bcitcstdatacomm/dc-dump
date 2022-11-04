@@ -27,6 +27,7 @@
 #include <dc_util/dump.h>
 #include <dc_util/streams.h>
 #include <dc_util/types.h>
+#include <fcntl.h>
 
 
 struct application_settings
@@ -85,7 +86,7 @@ int main(int argc, char *argv[])
     free(env);
     ENV_CREATE:
     dc_error_reset(err);
-    dc_free(env, err);
+    free(err);
     ERROR_CREATE:
 
     return ret_val;
@@ -267,7 +268,7 @@ static off_t link_stdin(const struct dc_env *env, struct dc_error *err, struct d
     }
     else
     {
-        max_position = dc_max_off_t(env);
+        max_position = dc_max_off_t(env, err);
     }
 
     return max_position;

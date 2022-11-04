@@ -161,7 +161,7 @@ set_target_properties(dc-dump PROPERTIES
 
 find_library(LIBDC_ERROR dc_error REQUIRED)
 find_library(LIBDC_ENV dc_env REQUIRED)
-find_library(LIBDC_C dc_C REQUIRED)
+find_library(LIBDC_C dc_c REQUIRED)
 find_library(LIBDC_POSIX dc_posix REQUIRED)
 find_library(LIBDC_UNIX dc_unix REQUIRED)
 find_library(LIBDC_UTIL dc_util REQUIRED)
